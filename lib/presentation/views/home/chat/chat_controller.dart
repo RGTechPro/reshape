@@ -11,15 +11,18 @@ final _vsProvider =
 
 class _ViewState {
   final ApiStatus fetchGptResponseAPiStatus;
+  final ApiStatus fetchSpeechFromTextAPiStatus;
   final bool isGptTyping;
-
+  final Uint8List gptSpeech;
   final FieldState<String> query;
   final GptMessage gptResponse;
   final List<GptMessage> messages;
 
   _ViewState({
     required this.fetchGptResponseAPiStatus,
+    required this.fetchSpeechFromTextAPiStatus,
     required this.isGptTyping,
+    required this.gptSpeech,
     required this.query,
     required this.gptResponse,
     required this.messages,
@@ -28,7 +31,9 @@ class _ViewState {
   _ViewState.init()
       : this(
           fetchGptResponseAPiStatus: ApiStatus.init,
+          fetchSpeechFromTextAPiStatus: ApiStatus.init,
           isGptTyping: false,
+          gptSpeech: Uint8List(0),
           query: FieldState.initial(value: ''),
           gptResponse: GptMessage(role: '', content: ''),
           messages: [],
@@ -36,7 +41,9 @@ class _ViewState {
 
   _ViewState copyWith({
     ApiStatus? fetchGptResponseAPiStatus,
+    ApiStatus? fetchSpeechFromTextAPiStatus,
     bool? isGptTyping,
+    Uint8List? gptSpeech,
     FieldState<String>? query,
     GptMessage? gptResponse,
     List<GptMessage>? messages,
@@ -44,7 +51,10 @@ class _ViewState {
     return _ViewState(
       fetchGptResponseAPiStatus:
           fetchGptResponseAPiStatus ?? this.fetchGptResponseAPiStatus,
+      fetchSpeechFromTextAPiStatus:
+          fetchSpeechFromTextAPiStatus ?? this.fetchSpeechFromTextAPiStatus,
       isGptTyping: isGptTyping ?? this.isGptTyping,
+      gptSpeech: gptSpeech ?? this.gptSpeech,
       query: query ?? this.query,
       gptResponse: gptResponse ?? this.gptResponse,
       messages: messages ?? this.messages,
@@ -110,6 +120,12 @@ class _VSController extends StateNotifier<_ViewState> {
     );
   }
 
+  void playSound() async {
+    final player = AudioPlayer();
+    print(state.gptSpeech);
+    await player.play(BytesSource(state.gptSpeech));
+  }
+
   bool get isQueryVerified {
     final hasQuery = state.query.value.isNotEmpty;
     if (!hasQuery) {
@@ -142,12 +158,40 @@ class _VSController extends StateNotifier<_ViewState> {
           success.chatResponse.choices.first.message
         ],
       );
+      getTextToSpeech();
       resetGptTyping();
     }
 
     void onFailure(GetGptResponseFailure failure) {
       state = state.copyWith(
         fetchGptResponseAPiStatus: ApiStatus.failed,
+      );
+    }
+
+    response.resolve(onSuccess, onFailure);
+  }
+
+  Future<void> getTextToSpeech() async {
+    state = state.copyWith(
+      fetchSpeechFromTextAPiStatus: ApiStatus.loading,
+    );
+
+    final _chatRepository = ChatRepository();
+
+    final response = await _chatRepository.getSpeechFromText(
+        request: GetSpeechFromTextRequest(text: state.gptResponse.content));
+
+    void onSuccess(GetSpeechFromTextSuccess success) {
+      state = state.copyWith(
+        fetchSpeechFromTextAPiStatus: ApiStatus.success,
+        gptSpeech: success.speech,
+      );
+      playSound();
+    }
+
+    void onFailure(GetSpeechFromTextFailure failure) {
+      state = state.copyWith(
+        fetchSpeechFromTextAPiStatus: ApiStatus.failed,
       );
     }
 

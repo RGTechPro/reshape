@@ -3,10 +3,12 @@ part of 'dio.dart';
 class DioOptions {
   final String? baseUrl;
   final Map<String, String>? headers;
+  final ResponseType? responseType;
 
   DioOptions({
     this.baseUrl,
     this.headers,
+    this.responseType,
   });
 }
 
@@ -27,6 +29,7 @@ class AppDioClient extends DioForNative {
               },
             },
             validateStatus: (_) => true,
+            responseType: _dio.defaultOptions.responseType??ResponseType.json,
           ),
         ) {
     log('Headers : ${_dio.defaultOptions.headers!}');
@@ -48,6 +51,7 @@ class AppDioClient extends DioForNative {
               },
             },
             validateStatus: (_) => true,
+            responseType: options.responseType??ResponseType.json,
           ),
         );
 }

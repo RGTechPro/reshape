@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:reshape/repository/data/chat/chat_repository.dart';
 import 'package:reshape/repository/repository.dart';
 
@@ -12,6 +14,10 @@ abstract class ChatRepository extends Repository {
 
   Future<Result<GetGptResponseSuccess, GetGptResponseFailure>> getGptResponse({
     required GetGptResponseRequest request,
+  });
+
+Future<Result<GetSpeechFromTextSuccess, GetSpeechFromTextFailure>> getSpeechFromText({
+    required GetSpeechFromTextRequest request,
   });
 
 }

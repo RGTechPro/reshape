@@ -15,3 +15,19 @@ class GetGptResponseFailure extends RepositoryFailure {
      String? message,
   }) : super(message: message);
 }
+
+
+class GetSpeechFromTextSuccess extends RepositorySuccess {
+  final Uint8List speech;
+
+  GetSpeechFromTextSuccess({
+    required this.speech,
+  });
+
+}
+
+class GetSpeechFromTextFailure extends RepositoryFailure {
+  GetSpeechFromTextFailure({
+     String? message,
+  }) : super(message: message);
+}

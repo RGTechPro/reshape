@@ -15,3 +15,20 @@ class GetGptResponseRequest extends RepositoryRequest {
     };
   }
 }
+
+class GetSpeechFromTextRequest extends RepositoryRequest {
+  final String text;
+
+  GetSpeechFromTextRequest({
+    required this.text,
+  });
+
+  @override
+  Map<String, dynamic> toPayload({Map<String, dynamic>? parameters}) {
+    return {
+      'model': 'tts-1',
+      'voice': "alloy",
+      'input': text,
+    };
+  }
+}
