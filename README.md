@@ -12,6 +12,13 @@ To get an overview of the Voice Assistant app's features and functionality, you 
 
 [View Screen Recording](https://drive.google.com/file/d/15jD5BYSUH0xV2CB3pTq6xpX6ZUx06HMv/view?usp=sharing)
 
+## Screenshots
+
+<div style="display: flex;">
+  <img src="https://i.ibb.co/YRpzxxF/reshape-6-1.jpg" alt="Screenshot 1" width="400">
+  <img src="https://i.ibb.co/cvDVRmD/reshape-5.jpg" alt="Screenshot 2" width="400">
+</div>
+
 ## Packages Used
 
 - **flutter_riverpod: ^2.4.10**: Facilitates state management following the MVC architecture, ensuring a smooth user experience.
