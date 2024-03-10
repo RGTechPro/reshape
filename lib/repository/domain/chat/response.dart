@@ -31,3 +31,18 @@ class GetSpeechFromTextFailure extends RepositoryFailure {
      String? message,
   }) : super(message: message);
 }
+
+class GetTextFromSpeechSuccess extends RepositorySuccess {
+  final String text;
+
+  GetTextFromSpeechSuccess({
+    required this.text,
+  });
+
+}
+
+class GetTextFromSpeechFailure extends RepositoryFailure {
+  GetTextFromSpeechFailure({
+     String? message,
+  }) : super(message: message);
+}

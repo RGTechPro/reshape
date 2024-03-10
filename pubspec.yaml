@@ -15,6 +15,9 @@ dependencies:
   dio: ^5.4.1
   flutter_dotenv: ^5.1.0
   audioplayers: ^5.2.1
+  record: ^5.0.4
+  audio_waveforms: ^1.0.5
+
 
 dev_dependencies:
   flutter_test:

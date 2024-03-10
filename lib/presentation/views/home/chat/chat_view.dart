@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reshape/presentation/core_widgets/app_debounce.dart';
@@ -7,7 +10,9 @@ import 'package:reshape/presentation/core_widgets/form_field/form_fields.dart';
 import 'package:reshape/repository/domain/chat/chat_repository.dart';
 import 'package:reshape/repository/repository.dart';
 import 'package:audioplayers/audioplayers.dart';
-
+import 'package:record/record.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:audio_waveforms/audio_waveforms.dart';
 import '../../../core_widgets/text/animated_text.dart';
 
 part 'chat_controller.dart';
@@ -44,7 +49,7 @@ class ChatView extends ConsumerWidget {
         children: [
           () {
             if (state.messages.isEmpty) {
-              return SizedBox.shrink();
+              return Expanded(child: SizedBox.shrink());
             } else {
               return Expanded(
                 child: Padding(
@@ -111,6 +116,7 @@ class ChatView extends ConsumerWidget {
                 Expanded(
                   flex: 4,
                   child: TextFormField(
+
                     controller: stateController.queryFieldController,
                     // isMandatory: true,
 
@@ -123,12 +129,24 @@ class ChatView extends ConsumerWidget {
                   ),
                 ),
                 Expanded(
-                  child: IconButton(
-                    onPressed: stateController.onPressedSend,
-                    icon: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.black,
-                    ),
+                  child: Column(
+                    children: [
+                      IconButton(
+                        onPressed: stateController.onPressedSend,
+                        icon: const Icon(
+                          Icons.send_rounded,
+                          color: Colors.black,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: stateController.onPressedMic,
+                        icon:  Icon(
+                          (state.isRecording) ? Icons.stop_circle_rounded:
+                          Icons.mic_rounded,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                   //  AppCircleButton(
                   //   minWidth: 40,

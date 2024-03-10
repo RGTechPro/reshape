@@ -12,4 +12,7 @@ class AppNetworkingDefaults {
   final Map<String, String> defaultHeaders = {
     _AppNetworkHeaderKeys.contentType: 'application/json',
   };
+  final Map<String, String> multipartHeader = {
+    _AppNetworkHeaderKeys.contentType: 'multipart/form-data',
+  };
 }

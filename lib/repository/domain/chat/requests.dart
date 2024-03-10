@@ -27,8 +27,25 @@ class GetSpeechFromTextRequest extends RepositoryRequest {
   Map<String, dynamic> toPayload({Map<String, dynamic>? parameters}) {
     return {
       'model': 'tts-1',
-      'voice': "alloy",
+      'voice': "nova",
       'input': text,
+    };
+  }
+}
+
+class GetTextFromSpeechRequest extends RepositoryRequest {
+  final MultipartFile audioFile;
+
+  GetTextFromSpeechRequest({
+    required this.audioFile,
+
+  });
+
+  @override
+  Map<String, dynamic> toPayload({Map<String, dynamic>? parameters})  {
+    return {
+      "model": "whisper-1",
+      'file': audioFile ,
     };
   }
 }

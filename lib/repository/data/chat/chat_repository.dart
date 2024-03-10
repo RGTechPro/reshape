@@ -62,7 +62,7 @@ class ChatRepositoryImpl implements ChatRepository {
       );
 
       if (response?.statusCode == 200 && response?.data != null) {
-        final data = response?.data ;
+        final data = response?.data;
         return Success(GetSpeechFromTextSuccess(speech: data));
       } else {
         return Failure(GetSpeechFromTextFailure(
@@ -72,6 +72,35 @@ class ChatRepositoryImpl implements ChatRepository {
     } catch (e) {
       return Failure(
           GetSpeechFromTextFailure(message: 'Failed to get speech from text.'));
+    }
+  }
+
+  @override
+  Future<Result<GetTextFromSpeechSuccess, GetTextFromSpeechFailure>>
+      getTextFromSpeech({required GetTextFromSpeechRequest request}) async {
+    try {
+      final _dioClient = await _network.secureClient(
+          options: DioOptions(
+        baseUrl: AppEnvironment.config.openApiUrl,
+        headers: AppNetworkingBox.defaults.multipartHeader,
+      ));
+print(request.toPayload());
+      final response = await _dioClient?.post(
+        _EndPoints.speechToText,
+        data: FormData.fromMap(request.toPayload(),),
+      );
+
+      if (response?.statusCode == 200 && response?.data != null) {
+        final data = jsonDecode(jsonEncode(response?.data));
+        return Success(GetTextFromSpeechSuccess(text: data['text']));
+      } else {
+        return Failure(GetTextFromSpeechFailure(
+            message:
+                'Failed to get text from speech. Status code: ${response?.statusCode}'));
+      }
+    } catch (e) {
+      return Failure(
+          GetTextFromSpeechFailure(message: 'Failed to get text from speech.'));
     }
   }
 }
