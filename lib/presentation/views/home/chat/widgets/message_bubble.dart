@@ -82,7 +82,7 @@ class _MessageBubble extends ConsumerWidget {
                       children: [
                         Icon(Icons.multitrack_audio),
                         Text(
-                          'Aduio is being generated...',
+                          'Audio is being generated...',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
