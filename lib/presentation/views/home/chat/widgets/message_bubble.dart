@@ -15,6 +15,7 @@ class _MessageBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(_vsProvider);
     final stateController = ref.read(_vsProvider.notifier);
 
     String messageText = message ?? '';
@@ -34,7 +35,8 @@ class _MessageBubble extends ConsumerWidget {
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: isMyMessage ? const Color(0xFF965EFF) : const Color(0xFF383739),
+          color:
+              isMyMessage ? const Color(0xFF965EFF) : const Color(0xFF383739),
           borderRadius: BorderRadius.only(
             topLeft: isMyMessage ? const Radius.circular(8) : Radius.zero,
             topRight: isMyMessage ? Radius.zero : const Radius.circular(8),
@@ -51,25 +53,46 @@ class _MessageBubble extends ConsumerWidget {
               !isMyMessage && isLatestMessage || isFetching;
 
           if (isAvaGeneratingMessage) {
-            return AnimatedTextKit(
-              key: Key(messageText),
-              isRepeatingAnimation: false,
-              repeatForever: false,
-              displayFullTextOnTap: true,
-              totalRepeatCount: 0,
-              animatedTexts: [
-                TyperAnimatedText(
-                  messageText,
-                  speed: Duration(milliseconds: isFetching ? 12 : 24),
-                  textStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+            return Column(
+              children: [
+                AnimatedTextKit(
+                  key: Key(messageText),
+                  isRepeatingAnimation: false,
+                  repeatForever: false,
+                  displayFullTextOnTap: true,
+                  totalRepeatCount: 0,
+                  animatedTexts: [
+                    TyperAnimatedText(
+                      messageText,
+                      speed: Duration(milliseconds: isFetching ? 12 : 24),
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  onFinished: () => stateController
+                      .changeLastMessageAnimationStatus(status: false),
                 ),
+                if (state.fetchSpeechFromTextAPiStatus == ApiStatus.loading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.multitrack_audio),
+                        Text(
+                          'Aduio is being generated...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
               ],
-              onFinished: () => stateController
-                  .changeLastMessageAnimationStatus(status: false),
             );
           }
           return Text(

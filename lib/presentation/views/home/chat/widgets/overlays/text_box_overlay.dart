@@ -9,13 +9,15 @@ class _TextBoxOverlay extends ConsumerWidget {
     WidgetRef ref,
   ) {
     final stateController = ref.read(_vsProvider.notifier);
+    final _mediaQuery = MediaQuery.of(context);
+
     return Stack(
       children: [
         Positioned(
           left: 10,
           bottom: 110,
           child: Container(
-            width: 200,
+            width: _mediaQuery.size.width * 0.5,
             decoration: BoxDecoration(
               color: const Color(0xFFF3F5F5),
               borderRadius: BorderRadius.circular(8),
@@ -38,10 +40,10 @@ class _TextBoxOverlay extends ConsumerWidget {
           ),
         ),
         Positioned(
-          bottom: 20,
-          left: 20,
+          bottom: _mediaQuery.size.height * 0.03,
+          left: _mediaQuery.size.height * 0.025,
           child: SizedBox(
-            width: 300,
+            width: _mediaQuery.size.width * 0.75,
             child: TextFormX(
               onChanged: (v) {},
               maxLines: 2,
@@ -50,8 +52,8 @@ class _TextBoxOverlay extends ConsumerWidget {
           ),
         ),
         Positioned(
-          bottom: 150,
-          right: 20,
+          bottom: _mediaQuery.size.width * 0.35,
+          right: _mediaQuery.size.height * 0.025,
           child: TextButton(
             onPressed: stateController.onPressedOverlayNext,
             child: const Text('Next ➨',
@@ -61,7 +63,7 @@ class _TextBoxOverlay extends ConsumerWidget {
                 )),
           ),
         ),
-      const _SkipButton(),
+        const _SkipButton(),
       ],
     );
   }

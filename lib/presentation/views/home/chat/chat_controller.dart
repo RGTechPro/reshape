@@ -116,7 +116,7 @@ class _VSController extends StateNotifier<_ViewState> {
     bool? shouldShowOverlay =
         await _appStorage.retrieveBool(key: 'shouldShowOverlay');
 
-    if (shouldShowOverlay == null || shouldShowOverlay) {
+    if (shouldShowOverlay == null || !shouldShowOverlay) {
       _overlayController.show();
       state = state.copyWith(
         currentOverlayState: OverlayState.textBox,
@@ -172,6 +172,7 @@ class _VSController extends StateNotifier<_ViewState> {
   Future<void> startRecording() async {
     final hasPermission = await _recordingController.checkPermission();
     if (hasPermission) {
+      await _player.stop();
       await _recordingController.record();
     }
   }
