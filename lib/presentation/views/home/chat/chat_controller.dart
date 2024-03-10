@@ -91,12 +91,10 @@ class _VSController extends StateNotifier<_ViewState> {
   late TextEditingController _queryFieldController;
   late RecorderController _recordingController;
   late OverlayPortalController _overlayController;
-  late AppDebounce _debounce;
   final double listTileHeight = 100;
   String? _filePath;
   late AudioPlayer _player;
   late AppStorage _appStorage;
-  // late AudioRecorder _recorder;
   final focusNode = FocusNode();
 
   bool isLastMessageAnimationEnabled = false;
@@ -109,9 +107,6 @@ class _VSController extends StateNotifier<_ViewState> {
     _overlayController = OverlayPortalController();
     _appStorage = AppStorage.persistentStorage();
     resolveOverlay();
-    _debounce = AppDebounce(
-      const Duration(milliseconds: 250),
-    );
     Future.delayed(const Duration(milliseconds: 500)).then((value) {
       _scrollChatListToBottom();
     });
@@ -190,12 +185,16 @@ class _VSController extends StateNotifier<_ViewState> {
     if (state.currentOverlayState == OverlayState.textBox) {
       return;
     }
-
+    if (!state.isRecording && state.currentOverlayState == OverlayState.stop) {
+      onPressedOverlayNext();
+      return;
+    }
     onPressedOverlayNext();
-    // _overlayController.hide();
+
     state = state.copyWith(
       isRecording: !state.isRecording,
     );
+
     if (state.isRecording) {
       await startRecording();
     } else {
@@ -312,7 +311,7 @@ class _VSController extends StateNotifier<_ViewState> {
     response.resolve(onSuccess, onFailure);
   }
 
-  void onPressedOverlayNext() {
+  void onPressedOverlayNext() async {
     switch (state.currentOverlayState) {
       case OverlayState.mic:
         state = state.copyWith(
@@ -324,7 +323,7 @@ class _VSController extends StateNotifier<_ViewState> {
           currentOverlayState: OverlayState.none,
         );
         _overlayController.hide();
-        _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
+        await _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
         break;
       case OverlayState.textBox:
         state = state.copyWith(
@@ -336,13 +335,13 @@ class _VSController extends StateNotifier<_ViewState> {
     }
   }
 
-  void onPressedOverlaySkip() {
+  void onPressedOverlaySkip() async {
     state = state.copyWith(
       currentOverlayState: OverlayState.none,
     );
     _overlayController.hide();
 
-    _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
+    await _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
   }
 
   void onPressedSend() {

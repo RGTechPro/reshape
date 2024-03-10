@@ -7,13 +7,11 @@ class AppPersistentStorageImpl implements AppStorage {
   Future<void> storeBool<T>({
     required String key,
     required bool data,
-    bool overwrite = false,
   }) async {
     final database = await _obtainOrCreateDatabase();
 
-    if (data is String) {
       await database.setBool(key, data);
-    }
+    
   }
 
   @override

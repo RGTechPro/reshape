@@ -8,7 +8,6 @@ class _StopOverlay extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(_vsProvider);
     final stateController = ref.read(_vsProvider.notifier);
     return Stack(
       children: [
@@ -32,7 +31,7 @@ class _StopOverlay extends ConsumerWidget {
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'You can click on the stop button to stop the recording',
+                'You can click on the stop button to stop the recording and get the result.',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -52,14 +51,14 @@ class _StopOverlay extends ConsumerWidget {
           bottom: 140,
           left: 20,
           child: TextButton(
+              onPressed: stateController.onPressedOverlayNext,
               child: const Text('Next ➨',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 20,
-                  )),
-              onPressed: stateController.onPressedOverlayNext),
+                  ))),
         ),
-        _SkipButton(),
+        const _SkipButton(),
       ],
     );
   }

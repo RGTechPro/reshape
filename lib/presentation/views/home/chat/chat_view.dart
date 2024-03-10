@@ -203,17 +203,16 @@ class ChatView extends ConsumerWidget {
           OverlayPortal(
             controller: stateController._overlayController,
             overlayChildBuilder: (BuildContext context) {
-              final mediaQuery = MediaQuery.of(context);
               return BackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                 child: () {
                   switch (state.currentOverlayState) {
                     case OverlayState.textBox:
-                      return _TextBoxOverlay();
+                      return const _TextBoxOverlay();
                     case OverlayState.mic:
-                      return _MicOverlay();
+                      return const _MicOverlay();
                     case OverlayState.stop:
-                      return _StopOverlay();
+                      return const _StopOverlay();
                     default:
                       return const SizedBox.shrink();
                   }

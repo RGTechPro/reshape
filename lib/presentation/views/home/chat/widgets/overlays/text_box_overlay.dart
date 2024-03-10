@@ -8,7 +8,6 @@ class _TextBoxOverlay extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(_vsProvider);
     final stateController = ref.read(_vsProvider.notifier);
     return Stack(
       children: [
@@ -47,8 +46,6 @@ class _TextBoxOverlay extends ConsumerWidget {
               onChanged: (v) {},
               maxLines: 2,
               enabled: false,
-              // isProcessing: state.fetchTextFromSpeechAPiStatus ==
-              //     ApiStatus.loading,
             ),
           ),
         ),
@@ -56,15 +53,15 @@ class _TextBoxOverlay extends ConsumerWidget {
           bottom: 150,
           right: 20,
           child: TextButton(
+            onPressed: stateController.onPressedOverlayNext,
             child: const Text('Next ➨',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 20,
                 )),
-            onPressed: stateController.onPressedOverlayNext,
           ),
         ),
-      _SkipButton(),
+      const _SkipButton(),
       ],
     );
   }

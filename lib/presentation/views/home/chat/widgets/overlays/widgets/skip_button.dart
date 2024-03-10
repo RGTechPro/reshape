@@ -1,7 +1,7 @@
 part of '../../../chat_view.dart';
 
 class _SkipButton extends ConsumerWidget {
-  const _SkipButton({super.key});
+  const _SkipButton();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -10,6 +10,7 @@ class _SkipButton extends ConsumerWidget {
       top: 80,
       right: 10,
       child: TextButton(
+        onPressed: stateController.onPressedOverlaySkip,
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF3F5F5),
@@ -23,16 +24,15 @@ class _SkipButton extends ConsumerWidget {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: const Text('Skip ⏩',
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Skip ⏩',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 20,
                 )),
           ),
         ),
-        onPressed: stateController.onPressedOverlaySkip,
       ),
     );
   }

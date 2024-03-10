@@ -8,7 +8,6 @@ class _MicOverlay extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(_vsProvider);
     final stateController = ref.read(_vsProvider.notifier);
     return Stack(
       children: [
@@ -32,7 +31,7 @@ class _MicOverlay extends ConsumerWidget {
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'You can click on the mic button to start recording',
+                'You can click on the mic button to start recording. Try Now!!',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -43,7 +42,7 @@ class _MicOverlay extends ConsumerWidget {
           right: 20,
           child: AppIconButton(
             iconSize: 50,
-            onPressed:stateController.onPressedMic,
+            onPressed: stateController.onPressedMic,
             icon: Icons.mic_rounded,
             iconColor: Colors.black,
           ),
@@ -52,15 +51,15 @@ class _MicOverlay extends ConsumerWidget {
           bottom: 140,
           left: 20,
           child: TextButton(
+            onPressed: stateController.onPressedOverlayNext,
             child: const Text('Next ➨',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 20,
                 )),
-              onPressed: stateController.onPressedOverlayNext,
           ),
         ),
-        _SkipButton(),
+        const _SkipButton(),
       ],
     );
   }
