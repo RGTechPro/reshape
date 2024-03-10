@@ -1,11 +1,6 @@
 part of '../dio.dart';
 
 class DioTokenInvalidInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-
-    return super.onRequest(options, handler);
-  }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:reshape/environment/environment.dart';
@@ -18,13 +17,13 @@ class ChatRepositoryImpl implements ChatRepository {
     required GetGptResponseRequest request,
   }) async {
     try {
-      final _dioClient = await _network.secureClient(
+      final dioClient = await _network.secureClient(
           options: DioOptions(
         baseUrl: AppEnvironment.config.openApiUrl,
         headers: AppNetworkingBox.defaults.defaultHeaders,
       ));
 
-      final response = await _dioClient?.post(
+      final response = await dioClient?.post(
         _EndPoints.chatCompletion,
         data: request.toPayload(),
       );
@@ -49,14 +48,14 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Result<GetSpeechFromTextSuccess, GetSpeechFromTextFailure>>
       getSpeechFromText({required GetSpeechFromTextRequest request}) async {
     try {
-      final _dioClient = await _network.secureClient(
+      final dioClient = await _network.secureClient(
           options: DioOptions(
         baseUrl: AppEnvironment.config.openApiUrl,
         headers: AppNetworkingBox.defaults.defaultHeaders,
         responseType: ResponseType.bytes,
       ));
 
-      final response = await _dioClient?.post(
+      final response = await dioClient?.post(
         _EndPoints.textToSpeech,
         data: request.toPayload(),
       );
@@ -79,13 +78,13 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Result<GetTextFromSpeechSuccess, GetTextFromSpeechFailure>>
       getTextFromSpeech({required GetTextFromSpeechRequest request}) async {
     try {
-      final _dioClient = await _network.secureClient(
+      final dioClient = await _network.secureClient(
           options: DioOptions(
         baseUrl: AppEnvironment.config.openApiUrl,
         headers: AppNetworkingBox.defaults.multipartHeader,
       ));
 print(request.toPayload());
-      final response = await _dioClient?.post(
+      final response = await dioClient?.post(
         _EndPoints.speechToText,
         data: FormData.fromMap(request.toPayload(),),
       );

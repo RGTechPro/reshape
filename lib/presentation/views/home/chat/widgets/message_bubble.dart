@@ -7,7 +7,6 @@ class _MessageBubble extends ConsumerWidget {
   final bool isLatestMessage;
 
   const _MessageBubble({
-    super.key,
     this.message,
     this.isMyMessage = false,
     this.isFetching = false,
@@ -28,22 +27,22 @@ class _MessageBubble extends ConsumerWidget {
       alignment: (isMyMessage) ? Alignment.bottomRight : Alignment.centerLeft,
       child: Container(
         margin: isMyMessage
-            ? EdgeInsets.only(left: 48)
-            : EdgeInsets.only(right: 48),
-        padding: EdgeInsets.symmetric(
+            ? const EdgeInsets.only(left: 48)
+            : const EdgeInsets.only(right: 48),
+        padding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: isMyMessage ? Color(0xFF965EFF) : Color(0xFF383739),
+          color: isMyMessage ? const Color(0xFF965EFF) : const Color(0xFF383739),
           borderRadius: BorderRadius.only(
-            topLeft: isMyMessage ? Radius.circular(8) : Radius.zero,
-            topRight: isMyMessage ? Radius.zero : Radius.circular(8),
-            bottomRight: Radius.circular(8),
-            bottomLeft: Radius.circular(8),
+            topLeft: isMyMessage ? const Radius.circular(8) : Radius.zero,
+            topRight: isMyMessage ? Radius.zero : const Radius.circular(8),
+            bottomRight: const Radius.circular(8),
+            bottomLeft: const Radius.circular(8),
           ),
           border: Border.all(
-            color: Color.fromRGBO(241, 241, 241, 0.30).withOpacity(0.2),
+            color: const Color.fromRGBO(241, 241, 241, 0.30).withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -62,7 +61,7 @@ class _MessageBubble extends ConsumerWidget {
                 TyperAnimatedText(
                   messageText,
                   speed: Duration(milliseconds: isFetching ? 12 : 24),
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -75,7 +74,7 @@ class _MessageBubble extends ConsumerWidget {
           }
           return Text(
             message ?? '',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,

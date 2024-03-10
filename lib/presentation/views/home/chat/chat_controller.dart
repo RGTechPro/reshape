@@ -1,5 +1,12 @@
 part of 'chat_view.dart';
 
+enum OverlayState {
+  mic,
+  stop,
+  textBox,
+  none,
+}
+
 final _vsProvider =
     StateNotifierProvider.autoDispose<_VSController, _ViewState>((ref) {
   final stateController = _VSController();
@@ -16,10 +23,10 @@ class _ViewState {
   final bool isGptTyping;
   final bool isRecording;
   final Uint8List gptSpeech;
-  final Uint8List userSpeech;
   final FieldState<String> query;
   final GptMessage gptResponse;
   final List<GptMessage> messages;
+  final OverlayState currentOverlayState;
 
   _ViewState({
     required this.fetchGptResponseAPiStatus,
@@ -28,10 +35,10 @@ class _ViewState {
     required this.isGptTyping,
     required this.isRecording,
     required this.gptSpeech,
-    required this.userSpeech,
     required this.query,
     required this.gptResponse,
     required this.messages,
+    required this.currentOverlayState,
   });
 
   _ViewState.init()
@@ -42,10 +49,10 @@ class _ViewState {
           isGptTyping: false,
           isRecording: false,
           gptSpeech: Uint8List(0),
-          userSpeech: Uint8List(0),
           query: FieldState.initial(value: ''),
           gptResponse: GptMessage(role: '', content: ''),
           messages: [],
+          currentOverlayState: OverlayState.none,
         );
 
   _ViewState copyWith({
@@ -55,10 +62,10 @@ class _ViewState {
     bool? isGptTyping,
     bool? isRecording,
     Uint8List? gptSpeech,
-    Uint8List? userSpeech,
     FieldState<String>? query,
     GptMessage? gptResponse,
     List<GptMessage>? messages,
+    OverlayState? currentOverlayState,
   }) {
     return _ViewState(
       fetchGptResponseAPiStatus:
@@ -70,59 +77,62 @@ class _ViewState {
       isGptTyping: isGptTyping ?? this.isGptTyping,
       isRecording: isRecording ?? this.isRecording,
       gptSpeech: gptSpeech ?? this.gptSpeech,
-      userSpeech: userSpeech ?? this.userSpeech,
       query: query ?? this.query,
       gptResponse: gptResponse ?? this.gptResponse,
       messages: messages ?? this.messages,
+      currentOverlayState: currentOverlayState ?? this.currentOverlayState,
     );
   }
 }
 
 class _VSController extends StateNotifier<_ViewState> {
   _VSController() : super(_ViewState.init());
-  late ScrollController chatScrollController;
-  late TextEditingController queryFieldController;
+  late ScrollController _chatScrollController;
+  late TextEditingController _queryFieldController;
+  late RecorderController _recordingController;
+  late OverlayPortalController _overlayController;
   late AppDebounce _debounce;
   final double listTileHeight = 100;
-  final _filePath = '/tmp/my-audio.m4a';
-  late Stream<Uint8List> _stream;
-  late StreamSubscription<Uint8List> _audioStreamSubscription;
+  String? _filePath;
   late AudioPlayer _player;
-  late AudioRecorder _recorder;
+  late AppStorage _appStorage;
+  // late AudioRecorder _recorder;
   final focusNode = FocusNode();
 
   bool isLastMessageAnimationEnabled = false;
 
   void initState() {
     _player = AudioPlayer();
-    _recorder = AudioRecorder();
-    chatScrollController = ScrollController();
-    queryFieldController = TextEditingController();
+    _chatScrollController = ScrollController();
+    _queryFieldController = TextEditingController();
+    _recordingController = RecorderController();
+    _overlayController = OverlayPortalController();
+    _appStorage = AppStorage.persistentStorage();
+    resolveOverlay();
     _debounce = AppDebounce(
-      Duration(milliseconds: 250),
+      const Duration(milliseconds: 250),
     );
-    Future.delayed(Duration(milliseconds: 500)).then((value) {
+    Future.delayed(const Duration(milliseconds: 500)).then((value) {
       _scrollChatListToBottom();
     });
   }
 
-  void _listenToStream() {
-    _audioStreamSubscription = _stream.listen(
-      (event) {
-        state = state.copyWith(
-          userSpeech: event,
-        );
-      },
-      onDone: () {
-        print('done');
-      },
-    );
+  void resolveOverlay() async {
+    bool? shouldShowOverlay =
+        await _appStorage.retrieveBool(key: 'shouldShowOverlay');
+
+    if (shouldShowOverlay == null || shouldShowOverlay) {
+      _overlayController.show();
+      state = state.copyWith(
+        currentOverlayState: OverlayState.textBox,
+      );
+    }
   }
 
   void _scrollChatListToBottom() {
     if (state.messages.isNotEmpty) {
-      chatScrollController.animateTo(
-        chatScrollController.position.maxScrollExtent,
+      _chatScrollController.animateTo(
+        _chatScrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -165,23 +175,24 @@ class _VSController extends StateNotifier<_ViewState> {
   }
 
   Future<void> startRecording() async {
-    if (await _recorder.hasPermission()) {
-      _stream = await _recorder.startStream(
-        const RecordConfig(
-          encoder: AudioEncoder.pcm16bits,
-        ),
-      );
-      _listenToStream();
-      // await _recorder.start(const RecordConfig(), path: _filePath);
+    final hasPermission = await _recordingController.checkPermission();
+    if (hasPermission) {
+      await _recordingController.record();
     }
   }
 
   Future<void> stopRecording() async {
-    await _recorder.stop();
-    _audioStreamSubscription.cancel();
+    _filePath = await _recordingController.stop();
+    _recordingController.refresh();
   }
 
   void onPressedMic() async {
+    if (state.currentOverlayState == OverlayState.textBox) {
+      return;
+    }
+
+    onPressedOverlayNext();
+    // _overlayController.hide();
     state = state.copyWith(
       isRecording: !state.isRecording,
     );
@@ -198,20 +209,15 @@ class _VSController extends StateNotifier<_ViewState> {
       fetchTextFromSpeechAPiStatus: ApiStatus.loading,
     );
 
-    final _chatRepository = ChatRepository();
-    print(state.userSpeech);
-    final audioFile = (state.userSpeech.isNotEmpty)
-        ? MultipartFile.fromBytes(
-          state.userSpeech,
-          contentType: MediaType('audio', 'pcm'),
-          // _recorder.convertBytesToInt16(state.userSpeech)  ,
-            
-          )
-        : null;
+    final chatRepository = ChatRepository();
 
-    final response = await _chatRepository.getTextFromSpeech(
+    final audioFile = await MultipartFile.fromFile(
+      _filePath!,
+    );
+
+    final response = await chatRepository.getTextFromSpeech(
         request: GetTextFromSpeechRequest(
-      audioFile: audioFile!,
+      audioFile: audioFile,
     ));
 
     void onSuccess(GetTextFromSpeechSuccess success) {
@@ -221,7 +227,7 @@ class _VSController extends StateNotifier<_ViewState> {
           value: success.text,
         ),
       );
-      queryFieldController.text = success.text;
+      _queryFieldController.text = success.text;
     }
 
     void onFailure(GetTextFromSpeechFailure failure) {
@@ -252,9 +258,9 @@ class _VSController extends StateNotifier<_ViewState> {
       fetchGptResponseAPiStatus: ApiStatus.loading,
     );
 
-    final _chatRepository = ChatRepository();
+    final chatRepository = ChatRepository();
 
-    final response = await _chatRepository.getGptResponse(
+    final response = await chatRepository.getGptResponse(
         request: GetGptResponseRequest(messages: state.messages));
 
     void onSuccess(GetGptResponseSuccess success) {
@@ -284,9 +290,9 @@ class _VSController extends StateNotifier<_ViewState> {
       fetchSpeechFromTextAPiStatus: ApiStatus.loading,
     );
 
-    final _chatRepository = ChatRepository();
+    final chatRepository = ChatRepository();
 
-    final response = await _chatRepository.getSpeechFromText(
+    final response = await chatRepository.getSpeechFromText(
         request: GetSpeechFromTextRequest(text: state.gptResponse.content));
 
     void onSuccess(GetSpeechFromTextSuccess success) {
@@ -306,7 +312,46 @@ class _VSController extends StateNotifier<_ViewState> {
     response.resolve(onSuccess, onFailure);
   }
 
+  void onPressedOverlayNext() {
+    switch (state.currentOverlayState) {
+      case OverlayState.mic:
+        state = state.copyWith(
+          currentOverlayState: OverlayState.stop,
+        );
+        break;
+      case OverlayState.stop:
+        state = state.copyWith(
+          currentOverlayState: OverlayState.none,
+        );
+        _overlayController.hide();
+        _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
+        break;
+      case OverlayState.textBox:
+        state = state.copyWith(
+          currentOverlayState: OverlayState.mic,
+        );
+        break;
+      case OverlayState.none:
+        break;
+    }
+  }
+
+  void onPressedOverlaySkip() {
+    state = state.copyWith(
+      currentOverlayState: OverlayState.none,
+    );
+    _overlayController.hide();
+
+    _appStorage.storeBool(key: 'shouldShowOverlay', data: false);
+  }
+
   void onPressedSend() {
+    if (state.currentOverlayState != OverlayState.none) {
+      return;
+    }
+
+    onPressedOverlayNext();
+
     if (isQueryVerified) {
       final messages = state.messages;
       messages.add(GptMessage(role: 'user', content: state.query.value));
@@ -321,7 +366,7 @@ class _VSController extends StateNotifier<_ViewState> {
           error: '',
         ),
       );
-      queryFieldController.clear();
+      _queryFieldController.clear();
     }
   }
 
@@ -333,6 +378,6 @@ class _VSController extends StateNotifier<_ViewState> {
   void dispose() {
     super.dispose();
     _player.dispose();
-    _recorder.dispose();
+    _recordingController.dispose();
   }
 }

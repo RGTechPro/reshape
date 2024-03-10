@@ -1,22 +1,26 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:reshape/modules/core/domain/persistent_storage/persistent_storage.dart';
 import 'package:reshape/presentation/core_widgets/app_debounce.dart';
+import 'package:reshape/presentation/core_widgets/buttons/app_icon_button.dart';
 import 'package:reshape/presentation/core_widgets/form_field/form_fields.dart';
 import 'package:reshape/repository/domain/chat/chat_repository.dart';
 import 'package:reshape/repository/repository.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:record/record.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import '../../../core_widgets/text/animated_text.dart';
 
 part 'chat_controller.dart';
 part 'widgets/message_bubble.dart';
+part 'widgets/overlays/stop_overlay.dart';
+part 'widgets/overlays/text_box_overlay.dart';
+part 'widgets/overlays/mic_overlay.dart';
+part 'widgets/overlays/widgets/skip_button.dart';
 
 class ChatView extends ConsumerWidget {
   const ChatView({super.key});
@@ -49,7 +53,22 @@ class ChatView extends ConsumerWidget {
         children: [
           () {
             if (state.messages.isEmpty) {
-              return Expanded(child: SizedBox.shrink());
+              return const Expanded(
+                  child: SizedBox(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      'Start a new chat with Reshape\n NOTE: Chats are not stored and would be refreshed on a new session.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ),
+              ));
             } else {
               return Expanded(
                 child: Padding(
@@ -59,7 +78,7 @@ class ChatView extends ConsumerWidget {
                     top: 24,
                   ),
                   child: ListView.builder(
-                    controller: stateController.chatScrollController,
+                    controller: stateController._chatScrollController,
                     shrinkWrap: true,
                     reverse: true,
                     itemCount: state.messages.length,
@@ -88,11 +107,11 @@ class ChatView extends ConsumerWidget {
                                 state.messages[reversedIndex].role == 'user',
                             isLatestMessage: isLatestMessage,
                           ),
-                          SizedBox(
+                          const SizedBox(
                             height: 16,
                           ),
                           if (isGptResponseLoading)
-                            _MessageBubble(
+                            const _MessageBubble(
                               isFetching: true,
                             ),
                           const SizedBox(
@@ -115,52 +134,65 @@ class ChatView extends ConsumerWidget {
               children: [
                 Expanded(
                   flex: 4,
-                  child: TextFormField(
-
-                    controller: stateController.queryFieldController,
-                    // isMandatory: true,
-
-                    decoration: InputDecoration(
-                      hintText: 'Ask ReShape..',
-                    ),
-                    // errorText: state.query.error,
-                    onChanged: stateController.onChangedQuery,
-                    maxLines: 3,
+                  child: Column(
+                    children: [
+                      if (!state.isRecording)
+                        TextFormX(
+                          enabled:
+                              state.currentOverlayState == OverlayState.none,
+                          controller: stateController._queryFieldController,
+                          onChanged: stateController.onChangedQuery,
+                          maxLines: 2,
+                          isProcessing: state.fetchTextFromSpeechAPiStatus ==
+                              ApiStatus.loading,
+                        ),
+                      if (state.isRecording)
+                        AudioWaveforms(
+                          size: Size(MediaQuery.of(context).size.width, 80.0),
+                          recorderController:
+                              stateController._recordingController,
+                          enableGesture: true,
+                          waveStyle: WaveStyle(
+                            waveColor: Colors.blue,
+                            showDurationLabel: false,
+                            spacing: 8.0,
+                            scaleFactor: 280,
+                            showBottom: false,
+                            extendWaveform: true,
+                            showMiddleLine: false,
+                            gradient: ui.Gradient.linear(
+                              const Offset(70, 50),
+                              Offset(MediaQuery.of(context).size.width / 2, 0),
+                              [
+                                Colors.indigo,
+                                Colors.blue,
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: Column(
                     children: [
-                      IconButton(
-                        onPressed: stateController.onPressedSend,
-                        icon: const Icon(
-                          Icons.send_rounded,
-                          color: Colors.black,
+                      if (stateController._queryFieldController.text.isNotEmpty)
+                        AppIconButton(
+                          onPressed: stateController.onPressedSend,
+                          icon: Icons.send_rounded,
                         ),
-                      ),
-                      IconButton(
-                        onPressed: stateController.onPressedMic,
-                        icon:  Icon(
-                          (state.isRecording) ? Icons.stop_circle_rounded:
-                          Icons.mic_rounded,
-                          color: Colors.black,
+                      if (stateController._queryFieldController.text.isEmpty)
+                        AppIconButton(
+                          iconSize: 40,
+                          onPressed: stateController.onPressedMic,
+                          icon: (state.isRecording)
+                              ? Icons.stop_circle_rounded
+                              : Icons.mic_rounded,
+                          iconColor:
+                              (state.isRecording) ? Colors.red : Colors.black,
                         ),
-                      ),
                     ],
                   ),
-                  //  AppCircleButton(
-                  //   minWidth: 40,
-                  //   color: theme.colors.primary,
-                  //   onPressed: stateController.onPressedSend,
-                  //   child: Padding(
-                  //     padding:const EdgeInsets.all(4),
-                  //     child: AppImageProvider(
-                  //       image: AppAssets.sendIcon,
-                  //       width: 24,
-                  //       height: 24,
-                  //     ),
-                  //   ),
-                  // ),
                 ),
               ],
             ),
@@ -168,6 +200,27 @@ class ChatView extends ConsumerWidget {
           const SizedBox(
             height: 24,
           ),
+          OverlayPortal(
+            controller: stateController._overlayController,
+            overlayChildBuilder: (BuildContext context) {
+              final mediaQuery = MediaQuery.of(context);
+              return BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                child: () {
+                  switch (state.currentOverlayState) {
+                    case OverlayState.textBox:
+                      return _TextBoxOverlay();
+                    case OverlayState.mic:
+                      return _MicOverlay();
+                    case OverlayState.stop:
+                      return _StopOverlay();
+                    default:
+                      return const SizedBox.shrink();
+                  }
+                }(),
+              );
+            },
+          )
         ],
       ),
     );

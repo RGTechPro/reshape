@@ -46,6 +46,7 @@ class GetTextFromSpeechRequest extends RepositoryRequest {
     return {
       "model": "whisper-1",
       'file': audioFile ,
+      'language': 'en',
     };
   }
 }

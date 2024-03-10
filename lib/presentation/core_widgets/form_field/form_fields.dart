@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:reshape/utils/constants.dart';
+
+part 'text_field.dart';
+
 class FieldState<T> {
   final T value;
   final bool isActive;
@@ -33,7 +38,6 @@ class FieldState<T> {
     );
   }
 }
-
 
 enum AssetUploadStatus { init, progress, success, failed }
 
