@@ -116,7 +116,7 @@ class _VSController extends StateNotifier<_ViewState> {
     bool? shouldShowOverlay =
         await _appStorage.retrieveBool(key: 'shouldShowOverlay');
 
-    if (shouldShowOverlay == null || !shouldShowOverlay) {
+    if (shouldShowOverlay == null || shouldShowOverlay) {
       _overlayController.show();
       state = state.copyWith(
         currentOverlayState: OverlayState.textBox,
