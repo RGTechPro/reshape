@@ -1,4 +1,4 @@
-# GPT-Based Voice Assistant
+# OpenAI-Based Voice Assistant
 
 ## Install the APK
 
